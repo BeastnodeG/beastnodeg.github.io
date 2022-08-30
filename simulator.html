@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script type="module" src="js/simulator.js"></script>
+    <link href="css/simulator.css" rel="stylesheet">
+    <title>Battle Simulator</title>
+
+    <meta property="og:title" content="Toontown: Corporate Clash Battle Simulation">
+    <meta property="og:site_name" content="TTCC Battle Calculator">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="http://ttcc.wizzerinus.tk/simulator.html">
+</head>
+<body>
+    <h2>Battle Simulator for TT:CC</h2>
+    <h3>Cogs</h3>
+    <div id="cog-panel" class="row row-cols-4 row-cols-lg-6"></div>
+    <h3>Control</h3>
+    <div class="row m-1">
+        <div class="col-auto">
+            <input type="text" id="control-level" placeholder="Enter the cog level" class="form-control">
+            <label for="control-level" class="visually-hidden"></label>
+        </div>
+        <div class="col-auto">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="control-exe">
+                <label for="control-exe">Executive</label>
+            </div>
+        </div>
+        <div class="col-auto">
+            <select class="form-select" id="control-type">
+                <option selected value="normal">Normal</option>
+                <option value="attack">Field Specialist</option>
+                <option value="defense">Operation Analyst</option>
+            </select>
+            <label for="control-type" class="visually-hidden"></label>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" type="button" id="control-create">Create</button>
+        </div>
+    </div>
+    <div class="row m-1">
+        <div class="col-auto">
+            <input type="text" id="control-random-min" class="form-control" placeholder="Min. level (10 default)">
+            <label for="control-random-min" class="visually-hidden"></label>
+        </div>
+        <div class="col-auto">
+            <input type="text" id="control-random-max" class="form-control" placeholder="Max. level (16 default)">
+            <label for="control-random-max" class="visually-hidden"></label>
+        </div>
+        <div class="col-auto">
+            <input type="text" id="control-random-count" class="form-control" placeholder="Count (4 default)">
+            <label for="control-random-count" class="visually-hidden"></label>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary bottom-0" type="button" id="control-randomize">Randomize</button>
+        </div>
+    </div>
+    <div class="row m-1">
+        <div class="col-3">
+            <input type="text" id="control-full" class="form-control" placeholder="Or you can enter the whole set instead">
+            <label for="control-full" class="visually-hidden"></label>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary bottom-0" type="button" id="control-save">Save</button>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-warning bottom-0" type="button" id="control-clear">Restart the set</button>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-danger bottom-0" type="button" id="control-reset">Remove all cogs</button>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success bottom-0" type="button" id="control-run">Simulate</button>
+        </div>
+    </div>
+    <h3>Gags</h3>
+    <div id="gag-panel" class="row row-cols-4 row-cols-lg-6"></div>
+
+    <div class="modal fade" id="modal-gag-panel">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">Attack cog <span id="modal-gag-panel-target"></span></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <table id="gag-panel-tbl"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="/">Back to index</a>
+</body>
+</html>
