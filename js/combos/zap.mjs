@@ -63,11 +63,11 @@ function getCrossDescription(state, output) {
 
             if (cross_right) {
                 if (output.strategy[0].target < output.strategy[1].target)
-                    output.description = "Zap can't cross"
+                    output.description = "no cross"
                 else if (output.strategy[0].target > output.strategy[1].target)
-                    output.description = "Zap must cross"
-            } else output.description = "Cross doesn't matter"
-        } else output.description = "Cross doesn't matter"
+                    output.description = "cross"
+            } else output.description = " "
+        } else output.description = " "
     }
 }
 
