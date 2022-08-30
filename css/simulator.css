@@ -1,0 +1,112 @@
+.cog, .gag, .toon {
+    width: calc(194px + 1.5rem);
+}
+
+.small-gag {
+    width: calc(86px + 1.5rem);
+}
+
+.played-gag .card, .played-cog .card {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.dead-cog .card {
+    background-color: rgba(200, 0, 0, 0.5);
+}
+
+.gag .card, .small-gag .card {
+    align-items: center;
+}
+
+.small-gag img, .gag img, .toon-gag img {
+    background-image: url("/sprites/gag-sprites.png");
+    width: 64px;
+    background-repeat: no-repeat;
+}
+
+.toon-sos img {
+    background-image: url("/sprites/sos-sprites.png");
+    width: 64px;
+    background-repeat: no-repeat;
+}
+
+.toon img {
+    width: 64px;
+}
+
+.gag-panel-cell-block {
+    height: 64px;
+    width: 64px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    margin: 3px;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.gag-panel-cell-block-gag {
+    background-image: url("/sprites/gag-sprites.png");
+}
+
+.gag-panel-cell-block-sos {
+    background-image: url("/sprites/sos-sprites.png");
+}
+
+.gag-panel-cell-block span {
+    font-weight: bold;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    color: white;
+    font-size: 25px;
+}
+
+.gag-special td {
+    height: 64px;
+    width: 64px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.gag-prestige-cell {
+    width: 64px;
+    background-image: url("/sprites/prestige.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+#gag-fire-cell { background-image: url("/sprites/fire.png") }
+#gag-sue-cell { background-image: url("/sprites/sue.png") }
+#gag-pete-cell { background-image: url("/sprites/pete.png") }
+#gag-rain-cell { background-image: url("/sprites/rain.png") }
+
+.gag-prestige-cell-active {
+    background-image: url("/sprites/activeprestige.png") !important;
+}
+
+#modal-gag-panel .modal-dialog, #modal-toon-choice .modal-dialog {
+    max-width: 670px;
+}
+
+#modal-gag-panel-extended .modal-dialog {
+    max-width: 870px;
+}
+
+.effect-bar {
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.tr-Toon-Up .gag-panel-cell { background-color: rgba(250, 100, 250, 50) }
+.tr-Trap .gag-panel-cell { background-color: rgba(255, 0, 0, 50) }
+.tr-Lure .gag-panel-cell { background-color: rgba(0, 150, 0, 50) }
+.tr-Sound .gag-panel-cell { background-color: rgba(0, 0, 200, 50) }
+.tr-Squirt .gag-panel-cell { background-color: rgba(200, 0, 150, 50) }
+.tr-Zap .gag-panel-cell { background-color: rgba(180, 200, 0, 50) }
+.tr-Throw .gag-panel-cell { background-color: rgba(200, 100, 0, 50) }
+.tr-Drop .gag-panel-cell { background-color: rgba(0, 200, 200, 50) }
+.gag-panel-cell-disabled { background-color: rgba(128, 128, 128, 50) !important }
+.gag-panel-cell-prestiged { background-color: rgba(0, 0, 200, 50) !important }
+.gag-panel-cell-existing { background-color: rgba(0, 200, 0, 50) !important }
