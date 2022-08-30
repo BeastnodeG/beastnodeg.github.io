@@ -2,11 +2,11 @@ export const names = {
     "Toon-Up": ["Feather", "Megaphone", "Lipstick", "Bamboo Cane", "Pixie Dust", "Juggling Cubes", "Confetti Cannon", "High Dive"],
     "Trap": ["Banana Peel", "Rake", "Springboard", "Marbles", "Quicksand", "Trapdoor", "Wrecking Ball", "TNT"],
     "Lure": ["$1 Bill", "Small Magnet", "$5 Bill", "Big Magnet", "$10 Bill", "Hypno Goggles", "$50 Bill", "Presentation"],
-    "Sound": ["Kazoo", "Bike Horn", "Whistle", "Bugle", "Aoogah", "trunk", "Foghorn", "Opera Singer"],
-    "Squirt": ["Squirting Flower", "Glass of Water", "Squirt Gun", "Water Balloon", "Seltzer Bottle", "Fire Hose", "Storm Cloud", "Geyser"],
-    "Zap": ["Joybuzzer", "Rug", "Electric Balloon", "Kart Battery", "Taser", "Broken Television", "Tesla Coil", "Lightning"],
+    "Sound": ["1 sound", "1 sound", "1 sound", "1 sound", "1 aoogah", "1 trunk", "1 fog", "1 opera"],
+    "Squirt": ["any squirt", "any squirt", "any squirt", "any squirt", "seltzer", "hose", "cloud", "geyser"],
+    "Zap": ["battery", "battery", "battery", "battery", "taser", "tv", "tesla", "lightning"],
     "Throw": ["Cupcake", "Fruit Pie Slice", "Cream Pie Slice", "Birthday Cake Slice", "Whole Fruit Pie", "Whole Cream Pie", "Birthday Cake", "Wedding Cake"],
-    "Drop": ["Flower Pot", "Sandbag", "Bowling Ball", "Anvil", "Big Weight", "Safe", "Boulder", "Piano"],
+    "Drop": ["Flower Pot", "weight", "weight", "weight", "weight", "safe", "boulder", "piano"],
     "Special": ["Fire", "Sue", "Professor Pete", "Rain"]
 }
 
