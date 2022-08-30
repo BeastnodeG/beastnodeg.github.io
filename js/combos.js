@@ -30,7 +30,7 @@ async function copy(combo) {
     const texts = combo.strategy.map(x => x.target > -1 ? `${names[x.id][x.level]} ${positions[x.target]}` : names[x.id][x.level])
     if (combo.description)
         texts.push(combo.description)
-    const str = texts.join(", ")
+    const str = texts.join(" ")
     await navigator.clipboard.writeText(str)
 
     Toast(
