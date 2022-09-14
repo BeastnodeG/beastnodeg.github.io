@@ -2,11 +2,11 @@ export const names = {
     "Toon-Up": ["Feather", "Megaphone", "Lipstick", "Bamboo Cane", "Pixie Dust", "Juggling Cubes", "Confetti Cannon", "High Dive"],
     "Trap": ["Banana Peel", "Rake", "Springboard", "Marbles", "Quicksand", "Trapdoor", "Wrecking Ball", "TNT"],
     "Lure": ["$1 Bill", "Small Magnet", "$5 Bill", "Big Magnet", "$10 Bill", "Hypno Goggles", "$50 Bill", "Presentation"],
-    "Sound": ["1 sound", "1 sound", "1 sound", "1 sound", "1 aoogah", "1 trunk", "1 fog", "1 opera"],
-    "Squirt": ["any squirt", "any squirt", "any squirt", "any squirt", "seltzer", "hose", "cloud", "geyser"],
+    "Sound": ["aoogah", "aoogah", "aoogah", "aoogah", "aoogah", "trunk", "fog", "opera"],
+    "Squirt": ["soak", "soak", "soak", "soak", "seltzer", "hose", "cloud", "geyser"],
     "Zap": ["battery", "battery", "battery", "battery", "taser", "tv", "tesla", "lightning"],
     "Throw": ["Cupcake", "Fruit Pie Slice", "Cream Pie Slice", "Birthday Cake Slice", "Whole Fruit Pie", "Whole Cream Pie", "Birthday Cake", "Wedding Cake"],
-    "Drop": ["Flower Pot", "weight", "weight", "weight", "weight", "safe", "boulder", "piano"],
+    "Drop": ["weight", "weight", "weight", "weight", "weight", "safe", "boulder", "piano"],
     "Special": ["Fire", "Sue", "Professor Pete", "Rain"]
 }
 
