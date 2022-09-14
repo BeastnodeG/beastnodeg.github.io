@@ -25,7 +25,7 @@ function play(strategy) {
     context.state.simulate(fixed_strategy)
 }
 
-const positions = ["far right", "mid right", "mid left", "far left"]
+const positions = ["---X", "--X-", "-X--", "X---"]
 async function copy(combo) {
     const texts = combo.strategy.map(x => x.target > -1 ? `${names[x.id][x.level]} ${positions[x.target]}` : names[x.id][x.level])
     if (combo.description)
