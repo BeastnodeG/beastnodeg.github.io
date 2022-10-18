@@ -102,7 +102,7 @@ function cringeZapTest(state, parameters) {
     for (const i of getIterator(2, 0, 7)) {
         const strategy = [
             new Zap(first_target, { level: i[1], prestige: true }),
-            new Zap(second_target, { level: i[0], prestige: true })
+            new Zap(second_target, { level: i[0], prestige: false })
         ]
 
         let start_h = state.cogs[fired].getHealth()
