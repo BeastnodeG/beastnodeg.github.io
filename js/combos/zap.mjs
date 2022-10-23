@@ -78,7 +78,7 @@ function zapTest(state, parameters) {
     for (const i of getIterator(2, 0, 7)) {
         const strategy = [
             new Zap(second_target, { level: i[1], prestige: true }),
-            new Zap(first_target, { level: i[0], prestige: false })
+            new Zap(first_target, { level: i[0], prestige: true })
         ]
 
         for (const cog of state.cogs) cog.effects.add(new EffectSoak(2))
@@ -102,7 +102,7 @@ function cringeZapTest(state, parameters) {
     for (const i of getIterator(2, 0, 7)) {
         const strategy = [
             new Zap(first_target, { level: i[1], prestige: true }),
-            new Zap(second_target, { level: i[0], prestige: false })
+            new Zap(second_target, { level: i[0], prestige: true })
         ]
 
         let start_h = state.cogs[fired].getHealth()
