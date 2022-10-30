@@ -2,16 +2,13 @@ import { update, getMinLevel, getIterator, getDoubleMinLevel } from "./common.mj
 import { Squirt, Zap } from "../calculator/toon-attack.mjs"
 import { damages } from "../calculator/constants.mjs"
 import { EffectSoak } from "../calculator/effects.mjs"
-
 function getDefault() {
     return { cost: 1e8, strategy: false, accuracy: 0 }
 }
-
 function selectSquirt(state, alive, output, strategy, parameters) {
     if (alive.length <= 1 || (alive.length === 2 && (
         (alive[0].position + alive[1].position) % 2 === 0 || (parameters.double_squirt && alive[0].position + alive[1].position === 3)))) {
         state.loadState()
-
         if (alive.length === 0) {
             strategy.push(new Squirt(0, { level: 0, prestige: false }))
             strategy.push(new Squirt(Math.min(2, state.cogs.length - 1), { level: 0, prestige: true }))
@@ -42,11 +39,9 @@ function selectSquirt(state, alive, output, strategy, parameters) {
                 update(output, strategy, state.turn(strategy))
             }
         }
-
         state.cleanup()
     }
 }
-
 function getCrossDescription(state, output) {
     if (output.strategy && output.strategy[0].target !== output.strategy[1].target) {
         if (output.strategy[0].level === output.strategy[1].level) {
@@ -60,7 +55,6 @@ function getCrossDescription(state, output) {
             state.cleanup()
             const cross_right = state.cogs.filter(x => x.canAttack()).length > 0
             state.loadState()
-
             if (cross_right) {
                 if (output.strategy[0].target < output.strategy[1].target)
                     output.description = "no cross"
@@ -70,7 +64,6 @@ function getCrossDescription(state, output) {
         } else output.description = " "
     }
 }
-
 function zapTest(state, parameters) {
     const output = getDefault()
     for (let first_target = 0; first_target < state.cogs.length; first_target++)
@@ -78,6 +71,7 @@ function zapTest(state, parameters) {
     for (const i of getIterator(2, 0, 7)) {
         const strategy = [
             new Zap(second_target, { level: i[1], prestige: true }),
+            new Zap(first_target, { level: i[0], prestige: false })
             new Zap(first_target, { level: i[0], prestige: true })
         ]
 
@@ -86,14 +80,11 @@ function zapTest(state, parameters) {
         state.cleanup()
         const alive = state.cogs.filter(x => x.canAttack())
         selectSquirt(state, alive, output, strategy, parameters)
-
         state.loadState()
     }
-
     getCrossDescription(state, output)
     return output
 }
-
 function cringeZapTest(state, parameters) {
     const output = getDefault()
     for (let fired = 0; fired < state.cogs.length; fired++)
@@ -101,8 +92,9 @@ function cringeZapTest(state, parameters) {
     for (let second_target = 0; second_target < state.cogs.length; second_target++)
     for (const i of getIterator(2, 0, 7)) {
         const strategy = [
-            new Zap(second_target, { level: i[1], prestige: true }),
-            new Zap(first_target, { level: i[0], prestige: true })
+            new Zap(first_target, { level: i[1], prestige: true }),
+            new Zap(second_target, { level: i[0], prestige: false })
+            new Zap(second_target, { level: i[0], prestige: true })
         ]
 
         let start_h = state.cogs[fired].getHealth()
@@ -120,17 +112,12 @@ function cringeZapTest(state, parameters) {
             cog.health = start_h
             alive.push(cog)
         }
-
         selectSquirt(state, alive, output, strategy, parameters)
-
         state.loadState()
     }
-
     getCrossDescription(state, output)
-
     return output
 }
-
 export function fullZapTest(state, parameters) {
     const output1 = zapTest(state, parameters)
     const output2 = cringeZapTest(state, parameters)
