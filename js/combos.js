@@ -92,7 +92,6 @@ function generateCombos() {
         syphon = document.querySelector("#control-syphon").checked,
         sound_count = document.querySelector("#control-sound-count").value,
         prestige_sound_count = document.querySelector("#control-prestige-sound-count").value,
-        prestige_zap_count = document.querySelector("#control-prestige-zap-count").value
 
     const parameters = { sound: sound_count, prestige_sound: prestige_sound_count, double_squirt, prestige_zap: prestige_zap_count }
     const strategies = []
