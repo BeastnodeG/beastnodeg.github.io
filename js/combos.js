@@ -94,7 +94,7 @@ function generateCombos() {
         prestige_sound_count = document.querySelector("#control-prestige-sound-count").value,
         prestige_zap_count = document.querySelector("#control-prestige-zap-count").value
 
-    const parameters = { sound: sound_count, prestige_sound: prestige_sound_count, double_squirt }
+    const parameters = { sound: sound_count, prestige_sound: prestige_sound_count, double_squirt, prestige_zap: prestige_zap_count }
     const strategies = []
     if (sound) {
         strategies.push(soundTest(context.state, parameters))
