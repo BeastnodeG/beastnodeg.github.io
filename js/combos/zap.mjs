@@ -71,7 +71,6 @@ function zapTest(state, parameters) {
     for (const i of getIterator(2, 0, 7)) {
         const strategy = [
             new Zap(second_target, { level: i[1], prestige: true }),
-            new Zap(first_target, { level: i[0], prestige: false })
             new Zap(first_target, { level: i[0], prestige: true })
         ]
 
@@ -93,7 +92,6 @@ function cringeZapTest(state, parameters) {
     for (const i of getIterator(2, 0, 7)) {
         const strategy = [
             new Zap(first_target, { level: i[1], prestige: true }),
-            new Zap(second_target, { level: i[0], prestige: false })
             new Zap(second_target, { level: i[0], prestige: true })
         ]
 
