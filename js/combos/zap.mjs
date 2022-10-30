@@ -79,14 +79,11 @@ function zapTest(state, parameters) {
         const strategy = [
             if (prestige_zap_count > 0) {
                 new Zap(second_target, { level: i[1], prestige: true }),
-            }
-            else {
+            else
                 new Zap(second_target, { level: i[0], prestige: false })
-            }
-            if (prestige_zap_count > 1) {
+            if (prestige_zap_count > 1)
                 new Zap(first_target, { level: i[0], prestige: true })
-            }
-            else {
+            else
                 new Zap(first_target, { level: i[0], prestige: false })
             }
         ]
@@ -113,14 +110,11 @@ function cringeZapTest(state, parameters) {
         const strategy = [
             if (prestige_zap_count > 0) {
                 new Zap(second_target, { level: i[1], prestige: true }),
-            }
-            else {
+            else
                 new Zap(second_target, { level: i[0], prestige: false })
-            }
-            if (prestige_zap_count > 1) {
+            if (prestige_zap_count > 1)
                 new Zap(first_target, { level: i[0], prestige: true })
-            }
-            else {
+            else
                 new Zap(first_target, { level: i[0], prestige: false })
             }
         ]
