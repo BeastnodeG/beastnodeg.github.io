@@ -65,10 +65,10 @@ export function getDoubleMinLevel(damage, track1, track2, multiplier = 1) {
 
 const track_costs = {
     "Toon-Up": 0.1, "Trap": 4, "Lure": 2, "Sound": 8,
-    "Squirt": 4, "Zap": 12, "Throw": 2, "Drop": 3,
+    "Squirt": 4, "Zap": 10, "Throw": 2, "Drop": 3,
     "Special": 50
 }
-const level_costs = [1, 2, 3, 5, 8, 30, 80, 135]
+const level_costs = [1, 2, 3, 4, 5, 40, 80, 140]
 export function getCost(strategy) {
     return strategy.reduce((x, y) => x + track_costs[y.id] * level_costs[y.parameters.level], 0)
 }
