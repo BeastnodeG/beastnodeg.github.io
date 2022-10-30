@@ -89,10 +89,10 @@ function generateCombos() {
     const sound = document.querySelector("#control-sound").checked,
         zap = document.querySelector("#control-cringe-zap").checked,
         double_squirt = document.querySelector("#control-double-pres-squirt").checked,
-        prestige_zap_count = document.querySelector("#control-prestige-zap-count").checked,
         syphon = document.querySelector("#control-syphon").checked,
         sound_count = document.querySelector("#control-sound-count").value,
-        prestige_sound_count = document.querySelector("#control-prestige-sound-count").value
+        prestige_sound_count = document.querySelector("#control-prestige-sound-count").value,
+        prestige_zap_count = document.querySelector("#control-prestige-zap-count").value
 
     const parameters = { sound: sound_count, prestige_sound: prestige_sound_count, double_squirt }
     const strategies = []
