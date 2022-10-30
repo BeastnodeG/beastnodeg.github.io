@@ -68,7 +68,7 @@ const track_costs = {
     "Squirt": 4, "Zap": 10, "Throw": 2, "Drop": 3,
     "Special": 50
 }
-const level_costs = [1, 2, 3, 4, 5, 40, 80, 140]
+const level_costs = [1, 2, 3, 4, 5, 40, 120, 200]
 export function getCost(strategy) {
     return strategy.reduce((x, y) => x + track_costs[y.id] * level_costs[y.parameters.level], 0)
 }
