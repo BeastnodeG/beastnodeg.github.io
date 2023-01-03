@@ -1,5 +1,5 @@
 import { Card, FunctionImage, Text, Title } from "./bootwrap.mjs"
-import { accuracies, damages, names, sos_names } from "./calculator/constants.mjs"
+import {accuracies, calculateDamage, damages, names, sos_names} from "./calculator/constants.mjs"
 import { ModifierCog } from "./calculator/cog.mjs"
 import { EffectLure, EffectSoak } from "./calculator/effects.mjs"
 
@@ -36,17 +36,24 @@ export function drawCog(i, j, cog_button) {
     cog_panel.append(element)
 }
 
-export function makeGagCard(i, target_line, func = () => {}, shift = 64) {
+export function makeGagCard(state, i, target_line, func = () => {}, shift = 64) {
     const image = FunctionImage("sprites/blank.png", func)
     image.firstChild.setAttribute("style", `background-position: ${-shift * i.level}px ${-shift * i.track_number}px`)
 
-    if (i.sos)
+    if (i.sos) {
+        if (i.track_number === 8) {
+            image.firstChild.setAttribute("style", `background-position: -192px -512px`)
+            return [image, Title(names["Special"][2]), Text(target_line)]
+        }
         return [image, Title(sos_names[i.track][i.level]), Text(target_line)]
+    }
     if (damages[i.track])
-        target_line = `${damages[i.track][i.level]} ${target_line}`
-    if (accuracies[i.track])
-        target_line = `${accuracies[i.track][i.level]} ${target_line}`
-    return [image, Title(names[i.track][i.level]), Text(target_line)]
+        target_line = `${calculateDamage(state, i)} ${target_line}`
+
+    let name = names[i.track][i.level]
+    if (i.prestige)
+        name = `${name} (P.)`
+    return [image, Title(name), Text(target_line)]
 }
 
 export function redrawState(context) {
@@ -62,7 +69,7 @@ export function redrawState(context) {
     const gag_panel = document.querySelector("#gag-panel")
     for (let j = client_attacks.length - 1; j >= 0; j--) {
         const i = client_attacks[j]
-        const element = Card(... makeGagCard(client_attacks[j], attacks[j].getTargets(state)))
+        const element = Card(... makeGagCard(state, client_attacks[j], attacks[j].getTargets(state)))
         element.classList.add("gag")
         if (i.played)
             element.classList.add("played-gag")

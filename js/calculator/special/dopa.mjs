@@ -14,7 +14,7 @@ export class BattleControllerDOPA extends BattleController {
 
 export class DerrickHand extends ControlledCog {
     constructor() {
-        super(25, { executive: 1, v2: 1, type: "normal" })
+        super(25, { executive: 1, v2: 1, type: "normal", health: 1100 })
         this.display = "The Derrick Hand"
         this.image = "sprites/cogs/derrickhand.png"
         this.attacks = [
@@ -38,7 +38,7 @@ export class DerrickHand extends ControlledCog {
 
 export class DirectorOfLandDevelopment extends ControlledCog {
     constructor() {
-        super(25, { executive: 1, type: "normal" })
+        super(25, { executive: 1, type: "normal", health: 1250 })
         this.display = "D. of Land Dev."
         this.image = "sprites/cogs/dold.png"
         this.attacks = [
@@ -62,7 +62,7 @@ export class DirectorOfLandDevelopment extends ControlledCog {
 
 export class DirectorOfPublicAffairs extends ControlledCog {
     constructor() {
-        super(30, { executive: 1, type: "normal" })
+        super(30, { executive: 1, type: "normal", health: 1500 })
         this.display = "D. of Public Affairs"
         this.image = "sprites/cogs/dopa.png"
         this.attacks = [
@@ -79,13 +79,13 @@ export class DirectorOfPublicAffairs extends ControlledCog {
         return false
     }
 
-    getExtras() {
+    getExtras(state) {
         const answer = []
         const effect = this.effects.find("Marketing")
         if (!effect) return []
         for (let j = 0; j < effect.rounds - effect.skipped; j++) {
             const gp = new CogAttackSingle(this, { damage: 22, accuracy: 0.7, name: "Glower Power" })
-            gp.setTarget(this.state)
+            gp.setTarget(state)
             answer.push(gp)
         }
         return answer

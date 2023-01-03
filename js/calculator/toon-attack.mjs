@@ -1,13 +1,12 @@
 import { Turn } from "./interfaces.mjs"
-import { damages, rounds, accuracies, sos_multipliers, names } from "./constants.mjs"
+import { damages, rounds, accuracies, sos_damages, names } from "./constants.mjs"
 import {
     EffectTrap,
     EffectLure,
     EffectSoak,
     EffectStun,
-    EffectDamageMultiplier,
     EffectTargetedMultiplier,
-    EffectMarkedForLaugh
+    EffectEncore, EffectAdditiveIncrease, EffectCheer
 } from "./effects.mjs"
 
 export class Track extends Turn {
@@ -40,27 +39,41 @@ export class Track extends Turn {
             i.clearQueue()
     }
 
+    getMaxAccuracy() {
+        return 0.95
+    }
+
+    getIgnoreQueue() {
+        return false
+    }
+
     calculateAccuracy(state) {
         let base_acc = this.getBaseAccuracy(state)
         if (base_acc >= 1)
             return 1
         if (this.target !== -1) {
-            if (state.cogs[this.target].queueExists()) return 1
-            if (state.cogs[this.target].missed) return 0
+            if (!this.getIgnoreQueue()) {
+                if (state.cogs[this.target].queueExists()) return 1
+                if (state.cogs[this.target].missed) return 0
+            }
             const cog = state.cogs[this.target]
             const accuracy = cog.effects.getAccuracy(base_acc)
             if (accuracy.base >= 1)
                 return 1
-            const stuns = state.globalStuns + accuracy.stuns
-            return Math.max(0, Math.min(0.95, (state.max_level - 1) / 10 + accuracy.base - accuracy.defense / 100 + stuns / 5))
+            let stuns = state.globalStuns + accuracy.stuns
+            if (this.author)
+                stuns = this.author.effects.getOverload("Stun", stuns, { track: this.id, base_stuns: stuns })
+            return Math.max(0, Math.min(this.getMaxAccuracy(), (state.max_level - 1) / 10 + accuracy.base - accuracy.defense / 100 + stuns / 5))
         } else {
             const acc = state.cogs.map(x => x.effects.getAccuracy(base_acc))
             if (acc.filter(x => x.base >= 1).length > 0)
                 return 1
             const base = Math.max(...acc.map(x => x.base))
             const def = Math.max(...acc.map(x => x.defense))
-            const stuns = state.globalStuns + state.localStuns + acc.reduce((x, y) => x + y.stuns, 0)
-            return Math.max(0, Math.min(0.95, (state.max_level - 1) / 10 + base - def / 100 + stuns / 5))
+            let stuns = state.globalStuns + acc.reduce((x, y) => x + y.stuns, 0)
+            if (this.author)
+                stuns = this.author.effects.getOverload("Stun", stuns, { track: this.id, base_stuns: stuns })
+            return Math.max(0, Math.min(this.getMaxAccuracy(), (state.max_level - 1) / 10 + base - def / 100 + stuns / 5))
         }
     }
 
@@ -71,7 +84,7 @@ export class Track extends Turn {
     }
 
     getTargets(state) {
-        return this.getTargetsTemplate(state.cogs.length, this.parameters.prestige ? "O" : "X", "-", this.target)
+        return this.getTargetsTemplate(state.cogs.length, "X", "-", this.target)
     }
 
     getTargetsTemplate(length, sym1, sym2, target) {
@@ -111,42 +124,16 @@ export class Fire extends Track {
     }
 }
 
-export class ProfessorPete extends Track {
-    constructor(target, parameters) {
-        super(target, names.Special[2], parameters)
-        this.base_priority = 0.2
-        this.parameters.targets_toons = true
-        this.target_string = "all toons"
-    }
-
-    apply(state) {
-        for (const i of state.toons)
-            i.restock(8)
-        state.globalStuns++
-    }
-
-    calculateAccuracy(state) {
-        return 1
-    }
-
-    getTargets(state) {
-        if (!state.toons) return "?"
-        return "X".repeat(state.toons.length)
-    }
-}
-
 export class Rain extends Track {
     constructor(target, parameters) {
-        super(target, names.Special[3], parameters)
+        super(target, names.Special[2], parameters)
         this.base_priority = 0.4
         this.parameters.targets_toons = true
-        this.target_string = "all toons"
+        this.target_string = `toon ${target + 1}`
     }
 
     apply(state) {
-        for (const i of state.toons)
-            i.effects.add(new EffectDamageMultiplier(1.05, 2))
-        state.globalStuns++
+        state.toons[this.target].effects.add(new EffectAdditiveIncrease(15, 1))
     }
 
     calculateAccuracy(state) {
@@ -154,8 +141,7 @@ export class Rain extends Track {
     }
 
     getTargets(state) {
-        if (!state.toons) return "?"
-        return "X".repeat(state.toons.length)
+        return this.getTargetsTemplate(state.toons.length, "X", "-", this.target)
     }
 }
 
@@ -164,13 +150,17 @@ export class BoostSOS extends Track {
         super(target, "BoostSOS", parameters)
         this.base_priority = 0.3
         this.parameters.targets_toons = true
-        this.target_string = "all toons"
+        this.target_string = `toon ${target + 1}`
     }
 
     apply(state) {
-        for (const i of state.toons)
-            i.effects.add(new EffectTargetedMultiplier(sos_multipliers[this.parameters.track][this.parameters.level], this.parameters.track, 3))
-        state.globalStuns++
+        state.toons[this.target].effects.add(
+            new EffectTargetedMultiplier(
+                sos_damages[this.parameters.track], this.parameters.track, this.parameters.level))
+        if (this.author && this.author !== state.toons[this.target])
+            this.author.effects.add(
+                new EffectTargetedMultiplier(
+                    sos_damages[this.parameters.track], this.parameters.track, this.parameters.level))
     }
 
     calculateAccuracy(state) {
@@ -178,8 +168,7 @@ export class BoostSOS extends Track {
     }
 
     getTargets(state) {
-        if (!state.toons) return "?"
-        return "X".repeat(state.toons.length)
+        return this.getTargetsTemplate(state.toons.length, "X", "-", this.target)
     }
 }
 
@@ -199,7 +188,7 @@ export class ToonUp extends Track {
         if (!state.toons || state.toons.length <= 1) return
         n = Math.ceil(this.getDamage(n))
         if (this.parameters.prestige)
-            this.author.heal(Math.ceil(n / 2))
+            this.author.heal(Math.ceil(n * 0.4))
         if (this.parameters.level % 2 === 1) {
             n = Math.ceil(n / (state.toons.length - 1))
             for (const i of state.toons)
@@ -211,23 +200,24 @@ export class ToonUp extends Track {
 
     miss(state) {
         this.missed = "missed"
-        this.execute(state, Math.floor(this.damageValues[this.parameters.level] / 5))
+        this.execute(state, Math.floor(this.damageValues[this.parameters.level] * 0.4))
     }
 
     apply(state) {
         this.execute(state, this.damageValues[this.parameters.level])
-        if (this.parameters.level % 2 === 1)
-            state.globalStuns++
+        if (this.parameters.level % 2 === 0)
+            state.toons[this.target].effects.add(new EffectCheer())
         else
-            state.localStuns++
+            for (const i of state.toons)
+                i.effects.add(new EffectCheer())
     }
 
     getTargets(state) {
         if (!state.toons || state.toons.length <= 1) return "?"
         if (this.parameters.level % 2 === 1)
-            return this.getTargetsTemplate(state.toons.length, "-", this.parameters.prestige ? "O" : "X", this.author.position || this.author)
+            return this.getTargetsTemplate(state.toons.length, "-", "X", this.author.position || this.author)
         else
-            return this.getTargetsTemplate(state.toons.length, this.parameters.prestige ? "O" : "X", "-", this.target)
+            return this.getTargetsTemplate(state.toons.length, "X", "-", this.target)
     }
 }
 
@@ -238,13 +228,13 @@ export class Trap extends Track {
     }
 
     apply(state) {
-        let damage = this.damageValues[this.parameters.level]
+        let damage = this.getDamage(this.damageValues[this.parameters.level])
         if (state.cogs[this.target].executive)
             damage *= 1.3
-        if (this.parameters.prestige && state.cogs[this.target].max_health <= 2 * state.cogs[this.target].health)
-            damage *= 1.2 // TODO: check whether the prestige works this way or it calculates damage during the lure
+        if (this.parameters.prestige)
+            damage *= 1.2
         state.cogs[this.target].effects.add(new EffectStun())
-        state.cogs[this.target].effects.add(new EffectTrap(this.getDamage(damage)))
+        state.cogs[this.target].effects.add(new EffectTrap(Math.ceil(damage)))
     }
 
     cleanup(state) {
@@ -271,16 +261,23 @@ export class Lure extends Track {
     }
 
     apply(state) {
-        const t = Math.ceil(this.getDamage(this.turnCount[this.parameters.level]))
+        const t = this.turnCount[this.parameters.level]
+        let baseDamage = this.getDamage(this.damageValues[this.parameters.level])
+        if (this.parameters.prestige) {
+            if (this.parameters.level % 2 === 1)
+                baseDamage *= 1.25
+            else
+                baseDamage *= 1.15
+        }
+        const damage = Math.ceil(baseDamage)
         if (this.target > -1) {
-            state.cogs[this.target].pushDamage(0, this.author)
             state.cogs[this.target].effects.add(new EffectStun())
-            state.cogs[this.target].effects.add(new EffectLure(t, this.parameters.prestige))
+            state.cogs[this.target].effects.add(new EffectLure(t, damage))
+            state.cogs[this.target].effects.trigger("Lure")
         } else {
             for (const i of state.cogs) {
-                i.pushDamage(0, this.author)
                 if (!i.effects.find("Lure")) {
-                    i.effects.add(new EffectLure(t, this.parameters.prestige, (this.parameters.prestige ? 0.65 : 0.5) + this.getDamage(1, 0) - 1))
+                    i.effects.add(new EffectLure(t, damage))
                     i.effects.trigger("Lure")
                 }
             }
@@ -290,7 +287,7 @@ export class Lure extends Track {
 
     getTargets(state) {
         if (this.parameters.level % 2 === 1)
-            return (this.parameters.prestige ? "O" : "X").repeat(state.cogs.length)
+            return "X".repeat(state.cogs.length)
         else
             return super.getTargets(state)
     }
@@ -311,25 +308,25 @@ export class Sound extends Track {
     }
 
     apply(state) {
-        const max_level = Math.ceil(Math.max(...state.cogs.map(x => x.level)) / 2)
         for (const i of state.cogs) {
             i.effects.trigger("UnLure")
-            const damage = this.damageValues[this.parameters.level] + (this.parameters.prestige ? max_level : 0)
-            i.pushDamage(this.getDamage(damage), this.author)
+            const damage = Math.ceil(this.getDamage(this.damageValues[this.parameters.level]))
+            i.pushDamage(damage, this.author, "Sound")
+            if (this.author)
+                this.author.effects.add(new EffectEncore(this.parameters.prestige ? 3 : 2))
         }
         state.globalStuns++
     }
 
     cleanup(state) {
         for (const i of state.cogs) {
-            i.queueCombo()
             i.explodeQueue()
             i.clearQueue()
         }
     }
 
     getTargets(state) {
-        return (this.parameters.prestige ? "O" : "X").repeat(state.cogs.length)
+        return "X".repeat(state.cogs.length)
     }
 }
 
@@ -340,22 +337,24 @@ export class Squirt extends Track {
         this.base_accuracy = 0.95
     }
 
-    soak(cog, turns) {
+    soak(cog, turns, allowDrenched = false) {
+        const author = this.author.position === undefined ? false : this.author.position
+        const drenched = allowDrenched && this.parameters.prestige
         if (!cog.effects.find("Soak"))
-            cog.effects.trigger("Soak", this.author.position === undefined ? false : this.author.position)
-        cog.effects.add(new EffectSoak(turns))
+            cog.effects.trigger("Soak", author)
+        cog.effects.add(new EffectSoak(turns, drenched))
     }
 
     apply(state) {
-        this.soak(state.cogs[this.target], this.turnCount[this.parameters.level])
-        if (this.parameters.prestige) {
+        this.soak(state.cogs[this.target], this.turnCount[this.parameters.level], true)
+        if (this.parameters.level % 2 === 1) {
             if (state.cogs[this.target + 1])
                 this.soak(state.cogs[this.target + 1], this.turnCount[this.parameters.level])
             if (state.cogs[this.target - 1])
                 this.soak(state.cogs[this.target - 1], this.turnCount[this.parameters.level])
         }
-        const damage = this.damageValues[this.parameters.level]
-        state.cogs[this.target].pushDamage(this.getDamage(damage), this.author)
+        let damage = this.getDamage(this.damageValues[this.parameters.level])
+        state.cogs[this.target].pushDamage(Math.ceil(damage), this.author, "Squirt")
         state.cogs[this.target].effects.add(new EffectStun())
     }
 
@@ -378,44 +377,46 @@ export class Zap extends Track {
     getBaseAccuracy(state) {
         if (state.cogs[this.target].effects.find("Soak"))
             return 1
-        return 0.3
+        return 0.0001
     }
 
     apply(state) {
-        const pos_iterator = [0, +1, +2, -1, -2]
-        const falloff = this.parameters.prestige ? 0.5 : 0.75
         let current_pos = this.target
-        const damage = this.damageValues[this.parameters.level]
         if (!state.cogs[current_pos].effects.find("Soak")) {
-            state.cogs[current_pos].pushDamage(damage)
+            state.cogs[current_pos].pushDamage(0, this.author, "Zap")
             state.cogs[current_pos].effects.trigger("UnLure")
-        } else
-            for (let current_turn = 0; current_turn < 3; current_turn++)
-                for (const i of pos_iterator)
-                    if (state.cogs[current_pos + i] && state.cogs[current_pos + i].effects.find("Soak") &&
-                        (current_turn === 0 || i !== 0) &&
-                        (
-                            (!state.cogs[current_pos + i].is_jumped && state.cogs[current_pos + i].getHealth() > 0 && current_pos + i !== this.target) ||
-                            current_turn === 0
-                        )
-                    ) {
-                        current_pos += i
-                        const cog = state.cogs[current_pos]
-                        if (current_turn > 0)
-                            cog.is_jumped = true
-                        cog.pushDamage(Math.ceil((3 - falloff * current_turn) * this.getDamage(damage)), this.author)
-                        cog.effects.trigger("ReduceSoak")
-                        cog.effects.trigger("UnLure")
-                        cog.effects.add(new EffectStun())
-                        break
-                    }
+            return
+        }
+
+        let damage = this.damageValues[this.parameters.level]
+        let damage_pool = damage * (this.parameters.prestige ? 1.1 : 0.9)
+        state.cogs[current_pos].pushDamage(damage, this.author, "Zap")
+        state.cogs[current_pos].effects.trigger("UnLure")
+        state.cogs[current_pos].effects.trigger("ReduceSoak", 1)
+
+        let next_cog = state.cogs[current_pos + 1], direction = 1
+        if (!next_cog || !next_cog.effects.find("Soak") || next_cog.health <= 0)
+            [ next_cog, direction ] = [ state.cogs[current_pos - 1], -1 ]
+        if (!next_cog || !next_cog.effects.find("Soak") || next_cog.health <= 0)
+            return
+        let cog_after = state.cogs[current_pos + 2 * direction]
+        const cog_pool = (cog_after && cog_after.effects.find("Soak") && next_cog.health > 0)
+            ? [ next_cog, cog_after ] : [ next_cog ]
+
+        damage_pool = Math.ceil(this.getDamage(damage_pool / cog_pool.length))
+        for (const i of cog_pool) {
+            if (i.effects.find("Soak")) {
+                i.pushDamage(damage_pool, this.author, "Zap")
+                i.effects.trigger("ReduceSoak", 1)
+                i.effects.trigger("UnLure")
+            } else break
+        }
     }
 
     cleanup(state) {
         for (const i of state.cogs) {
             i.explodeQueue()
             i.clearQueue()
-            delete i.is_jumped
         }
     }
 }
@@ -429,12 +430,10 @@ export class Throw extends Track {
 
     apply(state) {
         let damage = this.damageValues[this.parameters.level]
-        state.cogs[this.target].pushDamage(this.getDamage(damage), this.author)
+        state.cogs[this.target].pushDamage(Math.ceil(this.getDamage(damage)), this.author, "Throw")
         state.cogs[this.target].effects.add(new EffectStun())
-        if (!state.cogs[this.target].pres_throws)
-            state.cogs[this.target].pres_throws = 0
-        if (this.parameters.prestige)
-            state.cogs[this.target].pres_throws++
+        if (this.parameters.prestige && this.author)
+            this.author.heal(Math.ceil(damage / 5))
     }
 
     cleanup(state) {
@@ -443,10 +442,6 @@ export class Throw extends Track {
             i.queueCombo()
             i.explodeQueue()
             i.clearQueue()
-
-            if (i.pres_throws)
-                i.effects.add(new EffectMarkedForLaugh(i.pres_throws))
-            delete i.pres_throws
         }
     }
 }
@@ -455,8 +450,11 @@ export class Drop extends Track {
     constructor(target, parameters) {
         super(target, "Drop", parameters)
         this.base_priority = 8
-        // TODO: increased accuracy when hitting one cog with prestige drop (currently impossible to do)
-        this.base_accuracy = 0.5
+        this.base_accuracy = this.parameters.prestige ? 0.65 : 0.5
+    }
+
+    getIgnoreQueue() {
+        return true
     }
 
     getBaseAccuracy(state) {
@@ -470,7 +468,7 @@ export class Drop extends Track {
         if (!state.cogs[this.target].pres_drops)
             state.cogs[this.target].pres_drops = 0
         if (!state.cogs[this.target].effects.find("Lure"))
-            state.cogs[this.target].pushDamage(this.getDamage(damage), this.author)
+            state.cogs[this.target].pushDamage(this.getDamage(damage), this.author, "Drop")
         if (this.parameters.prestige)
             state.cogs[this.target].pres_drops++
         state.cogs[this.target].effects.add(new EffectStun())
@@ -478,7 +476,7 @@ export class Drop extends Track {
 
     cleanup(state) {
         for (const i of state.cogs) if (i.queueExists()) {
-            const combo = 0.1 * i.damageQueue.length + 0.1 * i.pres_drops
+            const combo = 0.3  // 0.1 + 0.1 * i.damageQueue.length + 0.1 * i.pres_drops
             i.queueCombo(combo)
             i.explodeQueue()
             i.clearQueue()
