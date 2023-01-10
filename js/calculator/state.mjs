@@ -4,6 +4,7 @@ export class State {
     constructor(max_level = 8) {
         this.cogs = []
         this.globalStuns = 0
+        this.localStuns = 0
         this.max_level = max_level
         this.accuracy = 1
     }

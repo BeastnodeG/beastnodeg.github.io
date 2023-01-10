@@ -34,8 +34,8 @@
                 <div class="col-auto">
                     <select class="form-select" id="control-type">
                         <option selected value="normal">Normal</option>
-                        <option value="attack">Field Specialist</option>
-                        <option value="defense">Operation Analyst</option>
+                        <option value="attack">Attack Specialist</option>
+                        <option value="defense">Defense Specialist</option>
                     </select>
                     <label for="control-type" class="visually-hidden"></label>
                 </div>
@@ -84,7 +84,15 @@
                 </div>
                 <div class="col-auto">
                     <input class="form-control" type="number" id="control-sound-count" value="4">
-                    <label for="control-sound-count">The sound gag count available</label>
+                    <label for="control-sound-count">The sound gag count</label>
+                </div>
+                <div class="col-auto">
+                    <input class="form-control" type="number" id="control-prestige-sound-count" value="4">
+                    <label for="control-prestige-sound-count">The sound prestige count</label>
+                </div>
+                <div class="col-auto">
+                    <input class="form-control" type="number" id="control-prestige-sound-count" value="2">
+                    <label for="control-prestige-zap-count">The zap prestige count</label>
                 </div>
             </div>
             <div class="row m-1">
@@ -96,14 +104,14 @@
                 </div>
                 <div class="col-auto">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="control-syphon" checked="">
-                        <label class="form-check-label" for="control-syphon">Calculate syphon strategy</label>
+                        <input class="form-check-input" type="checkbox" id="control-double-pres-squirt" checked="">
+                        <label class="form-check-label" for="control-double-pres-squirt">Check if you can use two prestige squirts</label>
                     </div>
                 </div>
                 <div class="col-auto">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="control-encore">
-                        <label class="form-check-label" for="control-encore">All toons have Encore from prestige sound</label>
+                        <input class="form-check-input" type="checkbox" id="control-syphon" checked="">
+                        <label class="form-check-label" for="control-syphon">Calculate syphon strategy</label>
                     </div>
                 </div>
             </div>

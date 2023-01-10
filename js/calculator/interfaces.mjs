@@ -87,7 +87,7 @@ export class BattleController {
                 answer.push(i.chooseAttack())
         for (const i of this.state.cogs)
             if (i.getExtras && i.effects.getOverload("CanMove", true)) {
-                const e = i.getExtras(this.state)
+                const e = i.getExtras()
                 for (const j of e) answer.push(j)
             }
         for (const i of answer)

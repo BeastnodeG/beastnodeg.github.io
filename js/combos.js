@@ -7,7 +7,6 @@ import { names } from "./calculator/constants.mjs"
 import { soundTest, soundDropTest, soundDoubleDropTest } from "./combos/sound.mjs"
 import { syphonTest, soundZapTest } from "./combos/syphon.mjs"
 import { fullZapTest } from "./combos/zap.mjs"
-import {EffectFakeEncore} from "./calculator/effects.mjs";
 
 const context = {
     attacks: [],
@@ -26,12 +25,12 @@ function play(strategy) {
     context.state.simulate(fixed_strategy)
 }
 
-const positions = ["Right", "Mid right", "Mid left", "Left"]
+const positions = ["---X", "--X-", "-X--", "X---"]
 async function copy(combo) {
     const texts = combo.strategy.map(x => x.target > -1 ? `${names[x.id][x.level]} ${positions[x.target]}` : names[x.id][x.level])
     if (combo.description)
         texts.push(combo.description)
-    const str = texts.join(", ")
+    const str = texts.join(" ")
     await navigator.clipboard.writeText(str)
 
     Toast(
@@ -46,7 +45,7 @@ function createCombo(combo) {
     const cog_count = context.state.cogs.length
     for (let j = combo.strategy.length - 1; j >= 0; j--) {
         const i = combo.strategy[j]
-        const symbol = "X"
+        const symbol = i.prestige ? "O" : "X"
         const image = Image("sprites/blank.png")
         image.setAttribute("style", `background-position: ${-64 * i.level}px ${-64 * track_numbers[i.id]}px`)
         let target_line = i.target === -1 ? symbol.repeat(cog_count) : "-".repeat(cog_count - i.target - 1) + symbol + "-".repeat(i.target)
@@ -85,22 +84,16 @@ function generateCombos() {
         alert("Too many cogs!")
         return
     }
+    context.state.saveState()
 
     const sound = document.querySelector("#control-sound").checked,
         zap = document.querySelector("#control-cringe-zap").checked,
+        double_squirt = document.querySelector("#control-double-pres-squirt").checked,
         syphon = document.querySelector("#control-syphon").checked,
-        encore = document.querySelector("#control-encore").checked,
-        sound_count = document.querySelector("#control-sound-count").value
-
-    if (encore)
-        for (const cog of context.state.cogs)
-            cog.effects.add(new EffectFakeEncore())
-    else
-        for (const cog of context.state.cogs)
-            cog.effects.remove("EffectFakeEncore")
-    context.state.saveState()
-
-    const parameters = { sound: sound_count, encore }
+        sound_count = document.querySelector("#control-sound-count").value,
+        prestige_sound_count = document.querySelector("#control-prestige-sound-count").value
+    
+    const parameters = { sound: sound_count, prestige_sound: prestige_sound_count, double_squirt }
     const strategies = []
     if (sound) {
         strategies.push(soundTest(context.state, parameters))

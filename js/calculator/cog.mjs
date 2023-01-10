@@ -33,12 +33,11 @@ export class Cog {
      *
      * @param n
      * @param {Toon|number} author
-     * @param {String|null} track
      */
-    pushDamage(n, author = 0, track = null) {
+    pushDamage(n, author = 0) {
         if (author)
             author.dealt_damage += n
-        this.damageQueue.push({ damage: Math.ceil(n), author: author.position === undefined ? author : author.position, track })
+        this.damageQueue.push({ damage: Math.ceil(n), author: author.position === undefined ? author : author.position })
         if (this.effects.find("Sue"))
             this.sue()
     }
@@ -63,20 +62,17 @@ export class Cog {
         return this.damageQueue.length > 0 || this.extraQueue.length > 0
     }
 
-    dealDamage(i, context = {}) {
-        this.health -= Math.ceil(this.effects.getOverload("TakeDamage", i, context))
+    dealDamage(i) {
+        this.health -= Math.ceil(this.effects.getOverload("TakeDamage", i))
     }
 
     explodeQueue() {
         for (const i of this.damageQueue) {
-            this.dealDamage(i.damage, i)
+            this.dealDamage(i.damage)
             this.targeted_damage[i.author] += i.damage
         }
         for (const i of this.extraQueue)
-            this.dealDamage(i.damage, i)
-
-        this.effects.trigger("ExplodeQueue", this.damageQueue.length)
-        this.effects.trigger("ExplodeExtraQueue", this.extraQueue.length)
+            this.dealDamage(i.damage)
     }
 
     clearQueue() {
@@ -93,7 +89,7 @@ export class Cog {
 
 export class ModifierCog extends Cog {
     constructor(level, attributes) {
-        const { executive, type, v2, health } = attributes
+        const { executive, type, v2 } = attributes
         super(level, executive)
         this.cog_type = type
         this.cog_exe = executive ? ".exe" : ""
@@ -102,9 +98,7 @@ export class ModifierCog extends Cog {
 
         this.display = `Lv${level}${this.cog_exe} ${type} cog ${this.cog_v2}`
 
-        if (health)
-            this.health = this.max_health = health
-        else if (type === "defense") {
+        if (type === "defense") {
             this.defense += 10
             this.health = this.max_health = (level + 2) * (level + 3) - 2
         } else if (type === "attack") {
@@ -115,8 +109,8 @@ export class ModifierCog extends Cog {
             this.health = this.max_health = Math.floor(this.health * 1.5)
     }
 
-    dealDamage(i, ctx) {
-        super.dealDamage(i, ctx)
+    dealDamage(i) {
+        super.dealDamage(i)
         if (this.cog_v2 === "v2" && this.health <= 0) {
             this.cog_v2 = "vs"
             this.health = Math.floor(this.max_health / 2)

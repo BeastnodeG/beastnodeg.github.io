@@ -138,25 +138,6 @@ export class EffectManager {
     }
 }
 
-class EffectDazed extends Effect {
-    constructor() {
-        super()
-        this.turns = 2
-    }
-
-    getText() { return `Dazed for ${this.turns} turns` }
-    getImage() { return "stun" }
-
-    processAccuracy(acc) {
-        acc.defense = Math.max(acc.defense - 10, 0)
-    }
-
-    cleanup() {
-        this.turns--
-        return this.turns > 0
-    }
-}
-
 export class EffectTrap extends Effect {
     constructor(damage) {
         super()
@@ -176,7 +157,6 @@ export class EffectTrap extends Effect {
             cog.explodeQueue()
             this.damage = 0
             cog.effects.trigger("UnLure")
-            cog.effects.add(new EffectDazed())
         }
         this.legal = false
     }
@@ -203,12 +183,13 @@ export class EffectTrap extends Effect {
 }
 
 export class EffectLure extends Effect {
-    constructor(turns, damage) {
+    constructor(turns, prestige, multiplier = false) {
         super()
         this.signals = ["LureAttack", "UnLure"]
         this.overloads = ["CanMove"]
         this.turns = turns
-        this.knockback = damage
+        this.knockback = multiplier || (prestige ? 0.65 : 0.5)
+        this.decay = prestige ? 105 : 100
         this.inactive = false
     }
 
@@ -216,6 +197,7 @@ export class EffectLure extends Effect {
         this.inactive = false
         this.knockback = Math.max(this.knockback, new_effect.knockback)
         this.turns = Math.max(this.turns, new_effect.turns)
+        this.decay = Math.max(this.decay, new_effect.decay)
     }
 
     enable() {
@@ -228,23 +210,24 @@ export class EffectLure extends Effect {
 
     getText() {
         if (!this.inactive)
-            return `Lured with ${this.knockback} knockback damage for ${this.turns} turns`
+            return `Lured with x${this.knockback} knockback for ${this.turns} turns`
     }
 
     getImage() {
         if (this.inactive) return false
+        if (this.knockback > 0.55) return "prestige-lure"
         return "lure"
     }
 
     processAccuracy(acc) {
-        acc.base = 100
+        acc.base = Math.min(100, Math.max(acc.base, this.decay))
     }
 
     execLureAttack() {
         if (this.inactive) return
         const cog = this.parent
-        for (let i = 0; i < cog.damageQueue.length; i++)
-            cog.damageQueue[i].damage += this.knockback
+        const sum = cog.damageQueue.reduce((x, y) => x + y.damage, 0)
+        cog.pushExtraDamage({ damage: Math.ceil(this.knockback * sum) })
         cog.effects.trigger("UnLure")
     }
 
@@ -254,6 +237,7 @@ export class EffectLure extends Effect {
 
     cleanup() {
         this.turns--
+        this.decay -= 5
         return this.turns > 0
     }
 
@@ -263,51 +247,26 @@ export class EffectLure extends Effect {
 }
 
 export class EffectSoak extends Effect {
-    constructor(turns, drenched) {
+    constructor(turns) {
         super()
-        this.turns = turns
-        this.drenched = drenched
-        this.drenchedReduction = false
         this.signals = ["ReduceSoak"]
-        this.overloads = ["DealDamage"]
+        this.turns = turns + 1
     }
 
-    getText() {
-        const word = this.drenched ? "Drenched" : "Soaked"
-        return `${word} for ${this.turns} turns`
-    }
-    getImage() { return this.drenched ? "presthrow" : "soak" }
+    getText() { return `Soaked for ${this.turns - 1} turns` }
+    getImage() { return "soak" }
 
     processAccuracy(acc) {
-        const delta = this.drenched ? 20 : 15
-        acc.defense = Math.max(acc.defense - delta, 0)
+        acc.defense = Math.max(acc.defense - 15, 0)
     }
 
-    execReduceSoak(value) {
-        if (this.drenched) {
-            if (this.drenchedReduction) return
-            this.drenchedReduction = true
-            this.turns = Math.max(0, this.turns - 1)
-        }
-        else
-            this.turns = 0
+    execReduceSoak() {
+        this.turns -= 1
     }
 
     cleanup() {
         this.turns--
-        this.drenchedReduction = false
-        return this.turns >= 1
-    }
-
-    overloadDealDamage(data, context) {
-        if (!this.drenched)
-            return data
-        return data * 0.85
-    }
-
-    update(new_eff) {
-        this.turns = Math.max(this.turns, new_eff.turns)
-        this.drenched ||= new_eff.drenched
+        return this.turns > 1
     }
 }
 
@@ -367,9 +326,8 @@ export class EffectAccuracy extends Effect {
 export class EffectSue extends Effect {
     constructor() {
         super()
-        this.turns = 4
+        this.turns = 5
         this.overloads = ["CanMove"]
-        this.signals = ["ExplodeQueue"]
     }
 
     getText() { return `Sued for ${this.turns} turns` }
@@ -387,11 +345,6 @@ export class EffectSue extends Effect {
 
     overloadCanMove() {
         return false
-    }
-
-    execExplodeQueue(count) {
-        if (this.turns < 5)  // might be needed for the debug sue usage
-            this.turns = Math.min(5, this.turns + count)
     }
 }
 
@@ -465,92 +418,54 @@ export class EffectDamageMultiplier extends Effect {
 }
 
 export class EffectTargetedMultiplier extends Effect {
-    constructor(values, track, level) {
+    constructor(n, track, turns = -1) {
         super()
         this.overloads = ["DealDamage"]
-        this.values = values
-        this.turns = [0, 0, 0]
-        this.turns[level] = 3 - level
-
+        this.mult = n
         this.track = track
+        this.turns = turns
         this.name = `TargetedMultiplier${track}`
     }
 
     overloadDealDamage(data, context) {
-        // Attempt to use the highest value from ones with nonzero turns
-        if (context.track !== this.track)
-            return data
-
-        for (let i = this.turns.length - 1; i >= 0; i--)
-            if (this.turns[i] > 0) {
-                this.turns[i] -= 1
-                return data + this.values[i]
-            }
+        if (context.track === this.track) {
+            if (context.method === 0)
+                return data + context.base_damage * (this.mult - 1)
+            return data * this.mult
+        }
         return data
     }
 
     getText() {
-        for (let i = this.turns.length - 1; i >= 0; i--)
-            if (this.turns[i] > 0)
-                return `${this.track} Damage +${this.values[i]} (${this.turns[i]} more times)`
-        return "IOU (ran out)"
+        if (this.turns === -1)
+            return `${this.track} Damage x${this.mult}`
+        else
+            return `${this.track} Damage x${this.mult} for ${this.turns} turns`
     }
 
     getImage() {
-        for (let i = this.turns.length - 1; i >= 0; i--)
-            if (this.turns[i] > 0)
-                return "damage-up"
-        return "blank"
-    }
-
-    update(new_effect) {
-        for (let i = this.turns.length - 1; i >= 0; i--)
-            this.turns[i] = Math.max(this.turns[i], new_effect.turns[i])
-    }
-
-    cleanup() {
-        for (let i = this.turns.length - 1; i >= 0; i--)
-            if (this.turns[i] > 0)
-                return true
-
-        return false
-    }
-}
-
-export class EffectAdditiveIncrease extends Effect {
-    constructor(n, turns = 1) {
-        super()
-        this.overloads = ["DealDamage"]
-        this.value = n
-        this.turns = turns
-        this.name = "AdditiveIncrease"
-    }
-
-    overloadDealDamage(data, context) {
-        this.turns -= 1
-        return data + this.value
-    }
-
-    getText() {
-        return `Damage +${this.value} (${this.turns} more times}`
-    }
-
-    getImage() {
-        if (this.value > 1.01)
+        if (this.mult > 1.01)
             return "damage-up"
-        else if (this.value < 0.99)
+        else if (this.mult < 0.99)
             return "damage-down"
         else
             return "blank"
     }
 
     update(new_effect) {
-        // This is not valid, sadly, but this is the fate of having this cringe effect system
-        this.turns += new_effect.turns
+        if (new_effect.turns === -1)
+            this.turns = -1
+        else if (new_effect.turns > this.turns && this.turns !== -1)
+            this.turns = new_effect.turns
+        this.mult = Math.max(this.mult, new_effect.mult)
     }
 
     cleanup() {
-        return this.turns > 0
+        if (this.turns > 0) {
+            this.turns--
+            return this.turns > 0
+        }
+        return true
     }
 }
 
@@ -591,97 +506,37 @@ export class EffectVulnerable extends Effect {
     }
 }
 
-export class EffectEncore extends Effect {
-    constructor(turns) {
-        super()
-        this.overloads = ["DealDamage"]
-        this.turns = this.maxTurns = turns
-        this.winded = this.windedPending = false
-    }
-
-    overloadDealDamage(data, context) {
-        if (this.turns < this.maxTurns) {
-            if (context.track === "Sound") {
-                if (this.winded) {
-                    this.turns = 2
-                    return data * 0.25
-                }
-                this.windedPending = true
-            }
-            return data * 1.15
-        }
-        return data
-    }
-
-    getText() {
-        return `Encore - ${this.turns} turns`
-    }
-
-    getImage() {
-        if (!this.winded)
-            return "presthrow"
-        return "punishment"
-    }
-
-    update(new_effect) {
-        if (!this.winded)
-            this.turns = new_effect.maxTurns
-    }
-
-    cleanup() {
-        if (this.windedPending) {
-            this.winded = true
-            this.windedPending = false
-            this.turns = 2
-            return true
-        }
-        this.turns--
-        return this.turns > 0
-    }
-}
-
-export class EffectCheer extends Effect {
-    constructor() {
-        super()
-        this.overloads = ["Stuns"]
-    }
-
-    overloadStuns(data) {
-        return data + 1
-    }
-
-    getText() {
-        return "Cheered"
-    }
-
-    getImage() {
-        return "insurance"
-    }
-
-    cleanup() {
-        return false
-    }
-}
-
-export class EffectFakeEncore extends Effect {
-    constructor() {
+export class EffectMarkedForLaugh extends Effect {
+    constructor(number_of_throws) {
         super()
         this.overloads = ["TakeDamage"]
+        this.num = number_of_throws
+        this.mult = 1.04 + 0.04 * number_of_throws
+        this.turns = 2
     }
 
-    overloadTakeDamage(data, context) {
-        return data * 1.15
+    overloadTakeDamage(data) {
+        return data * this.mult
     }
 
     getText() {
-        return "Toons have Encore"
+        return `Marked for Laugh ${printRoman(this.num)} - ${this.turns} turns`
     }
 
     getImage() {
         return "presthrow"
     }
 
+    update(new_effect) {
+        if (this.mult >= new_effect.mult)
+            return
+        this.mult = new_effect.mult
+        this.num = new_effect.num
+        this.turns = 2
+    }
+
     cleanup() {
-        return true
+        this.turns--
+        return this.turns > 0
     }
 }

@@ -74,13 +74,14 @@ function addAttack(i, j, target) {
     redrawState()
 }
 
-function addSOSAttack(i, j, target) {
+function addSOSAttack(i, j) {
     context.displayTurns[context.modalTarget] = { level: j, track_number: i, track: tracks[i], id: id++, sos: true }
-    const constructor = i < 8 ? toon_attacks.BoostSOS : toon_attacks.Rain
-    const turn = new constructor(target, context.displayTurns[context.modalTarget])
+    const turn = new toon_attacks.BoostSOS(-1, context.displayTurns[context.modalTarget])
     turn.author = context.modalTarget
     context.turns.push(turn)
+    context.modal.hide()
     context.modalTarget = -1
+    redrawState()
 }
 
 function chooseAttack(i, j) {
@@ -90,12 +91,6 @@ function chooseAttack(i, j) {
         context.level = { i, j }
         context.modal.hide()
     }
-}
-
-function chooseSOSCard(i, j) {
-    context.level = { i, j }
-    context.sos = 1
-    context.modal.hide()
 }
 
 function updateModal() {
@@ -116,15 +111,8 @@ function updateModal() {
                 const x = document.createElement("span")
                 x.innerHTML = count
                 blk.append(x)
-            }
-
-            const anyCogsUnlured = context.state.cogs.filter(x => !x.effects.find("Lure")).length > 0
-            const anyCogsUntrapped = context.state.cogs.filter(x => !x.effects.find("Trap") && !x.effects.find("Lure")).length > 0
-            const canBeUsed = count > 0 && (i === 1 ? anyCogsUntrapped : i === 2 ? anyCogsUnlured : true)
-            if (canBeUsed)
                 blk.addEventListener("click", () => chooseAttack(i, j))
-            else
-                blk.classList.add("gag-panel-cell-disabled")
+            } else blk.classList.add("gag-panel-cell-disabled")
             cell.append(blk)
             row.append(cell)
         }
@@ -141,7 +129,7 @@ function updateModal() {
             const blk = document.createElement("div")
             blk.classList.add("gag-panel-cell-block", "gag-panel-cell-block-sos")
             blk.setAttribute("style", `background-position: ${-64 * j}px ${-64 * i}px`)
-            blk.addEventListener("click", () => chooseSOSCard(i, j))
+            blk.addEventListener("click", () => addSOSAttack(i, j))
             cell.append(blk)
             row.append(cell)
         }
@@ -161,36 +149,33 @@ function updateModal() {
     sue_cell.addEventListener("click", () => chooseAttack(8, 1))
     row.append(sue_cell)
 
+    const pete_cell = document.createElement("td")
+    pete_cell.setAttribute("id", "gag-pete-cell")
+    pete_cell.addEventListener("click", () => chooseAttack(8, 2))
+    row.append(pete_cell)
+
     const rain_cell = document.createElement("td")
     rain_cell.setAttribute("id", "gag-rain-cell")
-    rain_cell.addEventListener("click", () => chooseSOSCard(8, 0))
+    rain_cell.addEventListener("click", () => chooseAttack(8, 3))
     row.append(rain_cell)
 
     tbl.append(row)
 }
 
 function cogButton(position) {
-    if (!context.level || context.level.i === 0 || context.sos) return
-    const cog = context.state.cogs[position]
-    if (cog && cog.effects.find("Lure") && (context.level.i === 1 || context.level.i === 2))
-        return
-    if (cog && cog.effects.find("Trap") && context.level.i === 1)
-        return
+    if (!context.level || context.level.i === 0) return
     addAttack(context.level.i, context.level.j, position)
     context.level = false
     context.modalTarget = -1
 }
 
 function toonButton(position) {
-    if (context.sos) {
-        addSOSAttack(context.level.i, context.level.j, position)
-        context.sos = false
-        context.level = false
-    } else if (context.level.i === 0) {
+    if (context.level.i === 0) {
         if (position !== context.modalTarget) {
             addAttack(context.level.i, context.level.j, position)
             context.modalTarget = -1
-        } else
+        }
+        else
             context.modal.show()
         context.level = false
     } else if (context.displayTurns[position]) {
@@ -243,11 +228,10 @@ function redrawState() {
         const i = context.state.toons[j]
 
         const turn = context.displayTurns[j] ? context.turns.filter(x => x.author === j || x.author.position === j)[0] : false
-        const arr = (context.displayTurns[j] && turn)
-            ? makeGagCard(context.state, context.displayTurns[j], turn.getTargets(context.state), () => toonButton(j))
+        const arr = context.displayTurns[j]
+            ? makeGagCard(context.displayTurns[j], turn.getTargets(context.state), () => toonButton(j))
             : [FunctionImage("sprites/toon.png", () => toonButton(j)), Title("Gag not chosen")]
-        const cls = context.displayTurns[j] && context.displayTurns[j].sos && context.displayTurns[j].track_number < 8 ? "toon-sos" : "toon-gag"
-        if (context.displayTurns[j]) arr[0].classList.add(cls)
+        if (context.displayTurns[j]) arr[0].classList.add(context.displayTurns[j].sos ? "toon-sos" : "toon-gag")
         const element = Card(
             ...arr,
             Text(`${i.getHealth()} / ${i.max_health}`),
@@ -415,11 +399,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("#control-restock-unite").addEventListener("click", () => {
         if (!context.state) return
         context.state.restock(7)
-        redrawState()
-    })
-    document.querySelector("#control-restock-unite8").addEventListener("click", () => {
-        if (!context.state) return
-        context.state.restock(8)
         redrawState()
     })
     document.addEventListener("simulation-turn", simulationTurn)
