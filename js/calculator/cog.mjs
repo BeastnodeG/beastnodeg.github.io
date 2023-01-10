@@ -4,7 +4,7 @@ import { weightedRandom } from "./constants.mjs"
 export class Cog {
     constructor(level, executive = false) {
         this.level = level
-        this.health = this.max_health = level
+        this.health = this.max_health = (level + 1) * (level + 2) * (executive ? 1.5 : 1)
         this.defense = (level === 1 && !executive) ? 2 : ((level > 14 ? 65 : level * 5 - 5) + (executive ? 5 : 0))
         this.executive = executive
         this.effects = new EffectManager(this)
